@@ -1,31 +1,46 @@
 import React, { useEffect, useState } from "react";
 import "./Titlecards.css";
-import cards_data from "../../assets/cards/Cards_data";
 import { Link } from "react-router-dom";
 
 const TitleCards = ({ title, category }) => {
   const [apiData, setApiData] = useState([]);
-
-  const options = {
-    method: "GET",
-    headers: {
-      accept: "application/json",
-      Authorization:
-        "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJjODMxMzc1Yjc2MTI0NDcyMWRjNjUzZjA0YTliYTM0MCIsIm5iZiI6MTczOTM0NjQ0OS41NDQsInN1YiI6IjY3YWM1MjExZDY2OWJmMGVhYTliODkzOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.KGtBAouh5ujtIQ8JFCI7KATFKrGg5dIu3ApcINvu3do",
-    },
-  };
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(
-      `https://api.themoviedb.org/3/movie/${
-        category ? category : "now_playing"
-      }?language=en-US&page=1`,
-      options
-    )
-      .then((res) => res.json())
-      .then((res) => setApiData(res.results))
-      .catch((err) => console.error(err));
-  }, []);
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          `https://api.themoviedb.org/3/movie/${
+            category ? category : "now_playing"
+          }?language=en-US&page=1`,
+          {
+            method: "GET",
+            headers: {
+              accept: "application/json",
+              Authorization: `Bearer ${import.meta.env.VITE_TMDB_AUTH_TOKEN}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setApiData(data.results);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [category]);
+
+  if (loading) return <div className="loading">Loading...</div>;
+  if (error) return <div className="error">Error: {error}</div>;
 
   return (
     <div className="title-cards">
@@ -33,10 +48,13 @@ const TitleCards = ({ title, category }) => {
       <div className="card-list">
         {apiData.map((card) => (
           <Link to={`/player/${card.id}`} className="card" key={card.id}>
-            <img
-              src={`https://image.tmdb.org/t/p/w500` + card.backdrop_path}
-              alt="cards"
-            />
+            {card.backdrop_path && (
+              <img
+                src={`https://image.tmdb.org/t/p/w500${card.backdrop_path}`}
+                alt={card.original_title || "Movie poster"}
+                loading="lazy"
+              />
+            )}
             <p>{card.original_title}</p>
           </Link>
         ))}
