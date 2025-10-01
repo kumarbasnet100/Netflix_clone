@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import "./Titlecards.css";
 import { Link } from "react-router-dom";
+import PropTypes from "prop-types";
 
 const TitleCards = ({ title, category }) => {
   const [apiData, setApiData] = useState([]);
@@ -61,6 +62,11 @@ const TitleCards = ({ title, category }) => {
       </div>
     </div>
   );
+};
+
+TitleCards.propTypes = {
+  title: PropTypes.string,
+  category: PropTypes.string,
 };
 
 export default TitleCards;
